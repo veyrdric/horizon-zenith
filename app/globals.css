@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --color-brand: #FFD100;
+  --color-brand-hover: #FFE042;
+  
+  --color-surface-dark: #12131A;
+  --color-surface-dark-elevated: #1C1D26;
+  --color-surface-light: #ECEEF2;
+  
+  --color-border-dark: #2B2D38;
+  --color-border-light: #C8CBD3;
+  
+  --color-text-muted: #A5A8B5;
+  
+  --color-error: #EF4444;
+  --color-error-text: #B91C1C;
+  --color-success: #10B981;
+
+  --text-mini: 9px;
+  --text-micro: 10px;
+}

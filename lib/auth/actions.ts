@@ -52,7 +52,8 @@ export async function loginAction(
   }
 
   // 5. Decisión de Ruteo Post-Login
-  const redirectTo = isAdmin(data.user) ? '/admin' : '/hub';
+  const isUserAdmin = await isAdmin(data.user);
+  const redirectTo = isUserAdmin ? '/admin' : '/hub';
 
   return { ok: true, redirectTo };
 }

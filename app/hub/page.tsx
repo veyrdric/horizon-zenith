@@ -14,74 +14,47 @@ export default async function HubPage() {
     redirect('/login');
   }
 
-  // Comprobación de seguridad: Si es admin, no debería estar aquí
-  if (isAdmin(user)) {
+  if (await isAdmin(user)) {
     redirect('/admin');
   }
 
   const profile = await getCurrentProfile();
 
   return (
-    <div className="min-h-screen bg-surface-light text-[#1E202B] font-sans antialiased p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        
-        {/* Cabecera Test */}
-        <div className="bg-surface-dark text-white p-8 rounded-xl shadow-lg relative overflow-hidden">
-          <div className="absolute right-0 top-0 opacity-10 pointer-events-none translate-x-4 -translate-y-4">
-            <div className="h-32 w-32 rounded-full border-4 border-dashed border-brand" />
+    <div className="min-h-screen bg-surface-backdrop text-surface-dark font-sans antialiased relative overflow-x-hidden pb-16 transition-colors duration-300">
+      <div className="absolute inset-0 pointer-events-none opacity-[0.02] bg-[radial-gradient(var(--color-surface-dark)_1.5px,transparent_1.5px)] [background-size:18px_18px]" />
+
+      {/* --- CABECERA --- */}
+      <div className="bg-surface-dark text-text-muted py-3.5 px-6 sticky top-0 z-50 shadow-md">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand" />
+            </span>
+            <p className="text-xs font-black tracking-widest text-white uppercase">
+              HORIZON ZENITH // PLATAFORMA DE OPERACIONES
+            </p>
           </div>
-          <div className="flex justify-between items-start">
-            <div>
-              <span className="text-micro bg-brand/20 text-brand font-black px-3 py-1 rounded uppercase tracking-widest">
-                Espacio de Trabajo Operativo
-              </span>
-              <h1 className="text-4xl font-black mt-4 uppercase tracking-tight">Portal del Alumno</h1>
-              <p className="text-neutral-400 font-bold uppercase tracking-wider text-xs mt-2">
-                Sesión autenticada correctamente
-              </p>
-            </div>
+          
+          <div className="flex items-center gap-2 bg-surface-dark-elevated p-1.5 rounded-xl">
+            <span className="px-4 py-2 text-[10px] font-black tracking-widest rounded-xl transition-all duration-150 bg-brand text-surface-dark shadow-sm uppercase">
+              PORTAL DEL ALUMNO
+            </span>
             <form action={logoutAction}>
-              <button 
-                type="submit"
-                className="bg-error/15 hover:bg-error/30 text-error border border-error/30 px-6 py-2.5 rounded-lg text-micro font-black uppercase tracking-widest transition-colors"
-              >
-                Cerrar Sesión
+              <button type="submit" className="px-4 py-2 text-[10px] font-black tracking-widest text-error hover:text-white transition-colors uppercase">
+                DESCONECTAR
               </button>
             </form>
           </div>
         </div>
+      </div>
 
-        {/* Datos de Telemetría */}
-        <div className="bg-white p-8 rounded-xl shadow-sm border border-border-light/30">
-          <h2 className="text-xs font-black uppercase tracking-widest text-surface-dark mb-6 border-b border-surface-light pb-4">
-            Telemetría del Perfil
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <div>
-                <span className="text-micro text-neutral-400 font-black uppercase tracking-widest block">ID de Operador (Auth)</span>
-                <span className="text-sm font-mono font-bold text-surface-dark">{user.id}</span>
-              </div>
-              <div>
-                <span className="text-micro text-neutral-400 font-black uppercase tracking-widest block">Email de Contacto</span>
-                <span className="text-sm font-bold text-surface-dark">{user.email}</span>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <span className="text-micro text-neutral-400 font-black uppercase tracking-widest block">Nombre Registrado (Profile)</span>
-                <span className="text-sm font-bold text-surface-dark">{profile?.name || 'No definido'}</span>
-              </div>
-              <div>
-                <span className="text-micro text-neutral-400 font-black uppercase tracking-widest block">Especialización / Rol</span>
-                <span className="text-sm font-bold text-surface-dark uppercase">{profile?.role || 'Ninguno'}</span>
-              </div>
-            </div>
-          </div>
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="bg-white rounded-xl p-12 text-center shadow-island">
+          <h2 className="text-2xl font-black uppercase tracking-widest text-surface-dark mb-4">Bienvenido, {profile?.name || user.email}</h2>
+          <p className="text-sm text-text-muted font-bold uppercase tracking-wider">Tu espacio de trabajo está siendo calibrado.</p>
         </div>
-
       </div>
     </div>
   );

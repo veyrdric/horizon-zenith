@@ -11,12 +11,20 @@ export async function getCurrentUser() {
 }
 
 /**
- * Determina si un usuario es administrador de forma determinista y segura.
- * NUNCA mira `profiles.role` para esto, confía 100% en el JWT (app_metadata).
+ * Determina si un usuario es administrador verificando su relación en la tabla profiles.
  */
-export function isAdmin(user: { app_metadata?: { is_admin?: boolean } } | null): boolean {
+export async function isAdmin(user: any): Promise<boolean> {
   if (!user) return false;
-  return user.app_metadata?.is_admin === true;
+  
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  // Soporta diferentes nomenclaturas comunes para la foreign key
+  return profile?.account_type_id === 1 || profile?.account_type === 1 || profile?.account_types_id === 1;
 }
 
 /**

@@ -1,7 +1,7 @@
 import { getCurrentUser, getCurrentProfile, isAdmin } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
 import { getAllStudents, getMetadata } from '@/lib/admin/queries';
-import MentorDashboard from '@/components/dashboard/MentorDashboard';
+import MentorDashboard from '@/components/dashboard/students/MentorDashboard';
 
 export const metadata = {
   title: 'Consola Horizon Zenith',

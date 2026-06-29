@@ -1,6 +1,6 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { getCurrentUser, isAdmin } from '@/lib/auth/session';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -201,4 +201,115 @@ export async function updateStudentStatusAction(formData: FormData) {
     console.error('Excepción en updateStudentStatusAction:', error);
     return { error: 'Ocurrió un error inesperado.' };
   }
+}
+
+export async function createMaterialAction(data: { title: string, content: string, tags?: string[] }) {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    return { error: 'No autorizado.' };
+  }
+
+  const { error } = await supabase
+    .from('materials')
+    .insert({
+      title: data.title,
+      content: data.content,
+      tags: data.tags || []
+    });
+
+  if (error) {
+    console.error('Error creating material:', error);
+    return { error: 'Error al crear el material de estudio.' };
+  }
+
+  revalidatePath('/admin/library');
+  return { success: true };
+}
+
+export async function updateMaterialAction(id: string, data: { title: string, content: string, tags?: string[] }) {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    return { error: 'No autorizado.' };
+  }
+
+  const { error } = await supabase
+    .from('materials')
+    .update({
+      title: data.title,
+      content: data.content,
+      tags: data.tags || []
+    })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error updating material:', error);
+    return { error: 'Error al actualizar el material de estudio.' };
+  }
+
+  revalidatePath('/admin/library');
+  revalidatePath(`/admin/library/${id}`);
+  return { success: true };
+}
+
+export async function deleteMaterialAction(id: string) {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    return { error: 'No autorizado.' };
+  }
+
+  const { error } = await supabase
+    .from('materials')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting material:', error);
+    return { error: 'Error al eliminar el material' };
+  }
+
+  revalidatePath('/admin/library');
+  return { success: true };
+}
+
+export async function getTagsAction() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('tags')
+    .select('name')
+    .order('name', { ascending: true });
+    
+  if (error) {
+    console.error('Error fetching tags:', error);
+    return { data: [], error: 'Error al obtener etiquetas' };
+  }
+  
+  return { data: data.map(t => t.name) };
+}
+
+export async function createTagAction(name: string) {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    return { error: 'No autorizado.' };
+  }
+
+  const normalized = name.trim().toLowerCase();
+  
+  const { error } = await supabase
+    .from('tags')
+    .insert({ name: normalized });
+    
+  if (error && error.code !== '23505') { // 23505 is unique violation
+    console.error('Error creating tag:', error);
+    return { error: 'Error al crear la etiqueta' };
+  }
+  
+  return { success: true, name: normalized };
 }

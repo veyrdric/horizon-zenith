@@ -1,7 +1,7 @@
 import { getCurrentUser, isAdmin } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
 import { getStudentById } from '@/lib/admin/queries';
-import StudentDetailClient from '@/components/dashboard/StudentDetailClient';
+import StudentDetailClient from '@/components/dashboard/students/StudentDetailClient';
 
 export const metadata = {
   title: 'Detalle de Alumno - Horizon Zenith',

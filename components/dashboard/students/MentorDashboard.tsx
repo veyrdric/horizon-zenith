@@ -170,16 +170,16 @@ export default function MentorDashboard({
                   </div>
                 </button>
 
-                {/* INACTIVE BUTTON */}
-                <button className="w-full text-left p-4 rounded-xl flex items-center justify-between transition-all duration-150 relative text-surface-dark hover:bg-surface-light">
+                {/* LIBRARY LINK */}
+                <Link href="/admin/library" className="w-full text-left p-4 rounded-xl flex items-center justify-between transition-all duration-150 relative text-surface-dark hover:bg-surface-light group">
                   <div className="flex items-center gap-3">
-                    <IconBookFilled size={20} className="text-text-muted" />
+                    <IconBookFilled size={20} className="text-text-muted group-hover:text-brand transition-colors" />
                     <div>
                       <span className="text-[8px] text-text-muted block tracking-widest font-black uppercase">DOC_03</span>
                       <span className="text-xs font-black tracking-wide uppercase text-surface-dark">Biblioteca Académica</span>
                     </div>
                   </div>
-                </button>
+                </Link>
               </div>
             </div>
 

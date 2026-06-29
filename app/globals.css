@@ -44,3 +44,124 @@
 .custom-scrollbar:hover::-webkit-scrollbar-thumb {
   background-color: var(--color-border-dark);
 }
+
+/* =========================================================
+   CUSTOMIZACIÓN PREMIUM DEL EDITOR MARKDOWN (UIW)
+   ========================================================= */
+
+/* Modificamos las variables base del tema dark de GitHub para usar nuestros colores */
+[data-color-mode*='dark'],
+[data-color-mode*='dark'] body,
+.wmde-markdown-var {
+  --color-canvas-default: var(--color-surface-dark) !important;
+  --color-canvas-subtle: var(--color-surface-dark) !important;
+  --color-border-default: transparent !important;
+  --color-border-muted: transparent !important;
+  --color-fg-default: #ffffff !important;
+  --color-fg-muted: var(--color-text-muted) !important;
+  --color-accent-fg: var(--color-brand) !important;
+  --color-accent-emphasis: var(--color-brand) !important;
+}
+
+/* Contenedor principal sin bordes */
+.w-md-editor {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background-color: var(--color-canvas-default) !important;
+}
+
+/* Toolbar (Barra de herramientas) */
+.w-md-editor-toolbar {
+  background-color: var(--color-surface-dark) !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  padding: 12px 16px !important;
+  border-radius: 0 !important;
+}
+
+/* Botones del Toolbar */
+.w-md-editor-toolbar li > button {
+  color: var(--color-text-muted) !important;
+  transition: all 0.2s ease !important;
+  border-radius: 8px !important;
+  padding: 6px !important;
+}
+
+.w-md-editor-toolbar li > button:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: var(--color-brand) !important;
+}
+
+.w-md-editor-toolbar li.active > button {
+  background-color: var(--color-brand) !important;
+  color: var(--color-surface-dark) !important;
+}
+
+/* Quitar líneas del medio y separadores */
+.w-md-editor-bar {
+  display: none !important;
+}
+.w-md-editor-content {
+  border: none !important;
+}
+.w-md-editor-content > div {
+  border-right: 1px solid rgba(255, 255, 255, 0.05) !important; /* Solo una línea muy sutil entre paneles */
+}
+
+/* Área de texto base (textarea y código fuente) */
+.w-md-editor-text-input,
+.w-md-editor-text-pre {
+  font-family: var(--font-mono) !important;
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+}
+.w-md-editor-text-input {
+  color: #fff !important;
+}
+
+/* Previsualización del Markdown (Estética Horizon Zenith) */
+.wmde-markdown {
+  font-family: var(--font-sans) !important;
+  background-color: transparent !important;
+  font-size: 16px !important;
+  line-height: 1.8 !important;
+}
+
+.wmde-markdown h1, 
+.wmde-markdown h2, 
+.wmde-markdown h3 {
+  border: none !important;
+  border-bottom: none !important;
+  font-weight: 900 !important;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  margin-top: 1.5em !important;
+  padding-bottom: 0 !important;
+}
+
+.wmde-markdown h1 {
+  color: var(--color-brand) !important;
+  font-size: 2.5em !important;
+}
+
+.wmde-markdown h2 {
+  color: #fff !important;
+}
+
+/* Bloques de código (Codeblocks) */
+.wmde-markdown pre {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+}
+
+/* Citas (Blockquotes) */
+.wmde-markdown blockquote {
+  border-left: 4px solid var(--color-brand) !important;
+  color: var(--color-text-muted) !important;
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  padding: 16px 20px !important;
+  border-radius: 0 12px 12px 0 !important;
+}

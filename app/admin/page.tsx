@@ -1,6 +1,6 @@
 import { getCurrentUser, getCurrentProfile, isAdmin } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
-import { getAllStudents } from '@/lib/admin/queries';
+import { getAllStudents, getMetadata } from '@/lib/admin/queries';
 import MentorDashboard from '@/components/dashboard/MentorDashboard';
 
 export const metadata = {
@@ -20,6 +20,7 @@ export default async function AdminPage() {
   }
 
   const students = await getAllStudents();
+  const metadataData = await getMetadata();
 
-  return <MentorDashboard serverStudents={students} />;
+  return <MentorDashboard serverStudents={students} metadata={metadataData} />;
 }

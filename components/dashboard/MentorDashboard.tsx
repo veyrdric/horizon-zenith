@@ -1,35 +1,56 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
-  IconSearch, 
-  IconUserPlus, 
-  IconUsersGroup,
-  IconBook2,
-  IconSettings,
+  IconSearchFilled, 
+  IconFolderFilled,
+  IconBookFilled,
+  IconSettingsFilled,
   IconX,
   IconHexagonFilled,
-  IconDeviceDesktopAnalytics
+  IconDeviceDesktopFilled,
+  IconFilterFilled,
+  IconUserFilled,
+  IconMailFilled,
+  IconBriefcaseFilled,
+  IconAwardFilled,
+  IconFlagFilled,
+  IconVideoFilled,
+  IconBrandGithubFilled
 } from '@tabler/icons-react';
 import { createStudentAction } from '@/lib/admin/actions';
 import { logoutAction } from '@/lib/auth/actions';
+import AddStudentModal from './AddStudentModal';
 
-export default function MentorDashboard({ serverStudents }: { serverStudents: any[] }) {
+export default function MentorDashboard({ 
+  serverStudents,
+  metadata
+}: { 
+  serverStudents: any[],
+  metadata: { specializations: any[], programTypes: any[] }
+}) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('Todos');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
   const [customToast, setCustomToast] = useState<{message: string, type: string} | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const handleCreateStudent = async (formData: FormData) => {
-    startTransition(async () => {
-      const result = await createStudentAction(formData);
-      if (result.error) {
-        showToast(result.error, 'error');
-      } else {
-        showToast('Alumno registrado con éxito.', 'success');
-        setShowAddForm(false);
-      }
-    });
+  const handleSuccess = (msg: string, id?: string) => {
+    showToast(msg, 'success');
+    setShowAddForm(false);
+    if (id) {
+      router.push(`/admin/student/${id}`);
+    }
+  };
+
+  const handleError = (msg: string) => {
+    showToast(msg, 'error');
   };
 
   const showToast = (message: string, type = 'success') => {
@@ -39,12 +60,26 @@ export default function MentorDashboard({ serverStudents }: { serverStudents: an
     }, 4000);
   };
 
-  const filteredStudents = serverStudents.filter(s => {
+  // 1. Sort descending by default
+  const sortedStudents = [...serverStudents].sort((a, b) => {
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
+  // 2. Filter by search and status
+  const filteredStudents = sortedStudents.filter(s => {
     const matchesSearch = (s.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
                           (s.role || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                           (s.email || '').toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
+    const matchesStatus = statusFilter === 'Todos' || s.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
+
+  // 3. Pagination
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+  const paginatedStudents = filteredStudents.slice(
+    (currentPage - 1) * itemsPerPage, 
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="min-h-screen bg-surface-backdrop text-surface-dark font-sans relative pb-20">
@@ -62,60 +97,13 @@ export default function MentorDashboard({ serverStudents }: { serverStudents: an
       )}
 
       {/* MODAL: Alta de Nuevo Alumno */}
-      {showAddForm && (
-        <div className="fixed inset-0 z-[100] bg-surface-dark/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white w-full max-w-md rounded-2xl overflow-hidden shadow-2xl relative p-8">
-            
-            <button onClick={() => setShowAddForm(false)} className="absolute top-6 right-6 text-text-muted hover:text-surface-dark transition-colors">
-              <IconX size={24} stroke={2.5} />
-            </button>
-
-            <div className="mb-8 pr-8">
-              <h1 className="text-3xl font-black text-surface-dark tracking-tight uppercase leading-none mb-2">
-                Alta de Alumno
-              </h1>
-              <p className="text-xs font-bold text-text-muted tracking-widest uppercase">
-                Creación de perfil y asignación de acceso
-              </p>
-            </div>
-
-            <form action={handleCreateStudent} className="flex flex-col gap-5">
-              <div className="space-y-1.5">
-                <label className="text-micro font-black uppercase tracking-widest text-surface-dark">Nombre Completo</label>
-                <div className="bg-surface-light rounded-xl transition-all duration-300 focus-within:ring-2 focus-within:ring-brand focus-within:bg-white">
-                  <input type="text" name="name" required placeholder="Ej: John Doe" className="w-full bg-transparent px-4 py-3.5 text-sm font-bold text-surface-dark placeholder:text-text-muted placeholder:font-normal focus:outline-none focus:ring-0 border-none" />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-micro font-black uppercase tracking-widest text-surface-dark">Correo Electrónico</label>
-                <div className="bg-surface-light rounded-xl transition-all duration-300 focus-within:ring-2 focus-within:ring-brand focus-within:bg-white">
-                  <input type="email" name="email" required placeholder="correo@ejemplo.com" className="w-full bg-transparent px-4 py-3.5 text-sm font-bold text-surface-dark placeholder:text-text-muted placeholder:font-normal focus:outline-none focus:ring-0 border-none" />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-micro font-black uppercase tracking-widest text-surface-dark">Contraseña Temporal</label>
-                <div className="bg-surface-light rounded-xl transition-all duration-300 focus-within:ring-2 focus-within:ring-brand focus-within:bg-white">
-                  <input type="password" name="password" required minLength={6} placeholder="••••••••" className="w-full bg-transparent px-4 py-3.5 text-sm font-bold text-surface-dark placeholder:text-text-muted placeholder:font-normal focus:outline-none focus:ring-0 border-none" />
-                </div>
-              </div>
-              
-              <div className="pt-3">
-                <button 
-                  type="submit" 
-                  disabled={isPending}
-                  className="w-full bg-brand hover:bg-brand-hover disabled:opacity-50 text-surface-dark py-4 rounded-xl text-sm font-black uppercase tracking-widest transition-all flex justify-center items-center gap-3 shadow-sm cursor-pointer"
-                >
-                  {isPending ? (
-                    <div className="w-4 h-4 rounded-full border-2 border-surface-dark border-t-transparent animate-spin" />
-                  ) : null}
-                  {isPending ? 'PROCESANDO...' : 'CONFIRMAR ALTA'}
-                </button>
-              </div>
-            </form>
-
-          </div>
-        </div>
-      )}
+      <AddStudentModal
+        isOpen={showAddForm}
+        onClose={() => setShowAddForm(false)}
+        metadata={metadata}
+        onSuccess={handleSuccess}
+        onError={handleError}
+      />
 
       {/* TOP FLOATING BAR */}
       <div className="pt-6 px-4 relative z-10 flex justify-center">
@@ -163,7 +151,7 @@ export default function MentorDashboard({ serverStudents }: { serverStudents: an
                 {/* ACTIVE BUTTON */}
                 <button className="w-full text-left p-4 rounded-xl flex items-center justify-between transition-all duration-150 relative bg-surface-dark text-white">
                   <div className="flex items-center gap-3">
-                    <IconUsersGroup size={20} stroke={2} className="text-brand" />
+                    <IconFolderFilled size={20} className="text-brand" />
                     <div>
                       <span className="text-[8px] text-text-muted block tracking-widest font-black uppercase">DIR_01</span>
                       <span className="text-xs font-black tracking-wide uppercase text-white">Directorio Estudiantil</span>
@@ -174,7 +162,7 @@ export default function MentorDashboard({ serverStudents }: { serverStudents: an
                 {/* INACTIVE BUTTON */}
                 <button className="w-full text-left p-4 rounded-xl flex items-center justify-between transition-all duration-150 relative text-surface-dark hover:bg-surface-light">
                   <div className="flex items-center gap-3">
-                    <IconDeviceDesktopAnalytics size={20} stroke={2} className="text-text-muted" />
+                    <IconDeviceDesktopFilled size={20} className="text-text-muted" />
                     <div>
                       <span className="text-[8px] text-text-muted block tracking-widest font-black uppercase">SYS_02</span>
                       <span className="text-xs font-black tracking-wide uppercase text-surface-dark">Telemetría Global</span>
@@ -185,7 +173,7 @@ export default function MentorDashboard({ serverStudents }: { serverStudents: an
                 {/* INACTIVE BUTTON */}
                 <button className="w-full text-left p-4 rounded-xl flex items-center justify-between transition-all duration-150 relative text-surface-dark hover:bg-surface-light">
                   <div className="flex items-center gap-3">
-                    <IconBook2 size={20} stroke={2} className="text-text-muted" />
+                    <IconBookFilled size={20} className="text-text-muted" />
                     <div>
                       <span className="text-[8px] text-text-muted block tracking-widest font-black uppercase">DOC_03</span>
                       <span className="text-xs font-black tracking-wide uppercase text-surface-dark">Biblioteca Académica</span>
@@ -202,73 +190,136 @@ export default function MentorDashboard({ serverStudents }: { serverStudents: an
           {/* ============================================================== */}
           <div className="col-span-12 lg:col-span-6 xl:col-span-6 flex flex-col gap-6">
             
-            {/* Buscador */}
+            {/* Buscador y Filtros */}
             <div className="bg-white rounded-2xl p-4 border border-transparent flex flex-col sm:flex-row items-center gap-4 justify-between shadow-island">
-              <div className="relative w-full">
+              <div className="relative w-full sm:flex-1">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">
-                  <IconSearch size={20} stroke={2.5} />
+                  <IconSearchFilled size={20} />
                 </span>
                 <input
                   type="text"
-                  placeholder="Buscar operador en la red..."
+                  placeholder="Buscar operador por nombre o email..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                   className="w-full bg-surface-light rounded-xl pl-12 pr-4 py-3.5 text-xs font-bold text-surface-dark placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                 />
               </div>
+              <div className="relative w-full sm:w-auto shrink-0">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">
+                  <IconFilterFilled size={18} />
+                </span>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+                  className="w-full sm:w-48 appearance-none bg-surface-light rounded-xl pl-10 pr-10 py-3.5 text-xs font-bold text-surface-dark focus:outline-none focus:ring-2 focus:ring-brand transition-all uppercase tracking-widest cursor-pointer"
+                >
+                  <option value="Todos">Todos los Estados</option>
+                  <option value="Activo">Activo</option>
+                  <option value="Pausado">Pausado</option>
+                  <option value="Finalizado">Finalizado</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none border-[5px] border-transparent border-t-text-muted mt-1.5"></div>
+              </div>
             </div>
 
-            {/* Grilla de Alumnos */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {filteredStudents.length === 0 ? (
-                <div className="col-span-full bg-white rounded-2xl p-12 text-center text-text-muted font-bold text-xs uppercase tracking-widest shadow-island">
-                  Base de datos sin registros.
+            {/* Grilla de Alumnos (Cards estilo Dashboard) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {paginatedStudents.length === 0 ? (
+                <div className="col-span-full bg-white rounded-2xl p-12 text-center shadow-island flex flex-col items-center justify-center gap-4 border border-transparent">
+                  <p className="text-text-muted font-bold text-sm uppercase tracking-widest">Todavía no tenés alumnos registrados o no coinciden con la búsqueda.</p>
+                  <button 
+                    onClick={() => setShowAddForm(true)}
+                    className="bg-brand hover:bg-brand-hover text-surface-dark px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-colors shadow-sm"
+                  >
+                    Nuevo Alumno
+                  </button>
                 </div>
               ) : (
-                filteredStudents.map((student) => {
+                paginatedStudents.map((student) => {
                   let badgeColors = 'bg-surface-light text-text-muted';
                   if (student.status === 'Activo') {
                     badgeColors = 'bg-success/15 text-success';
                   } else if (student.status === 'Pausado') {
-                    badgeColors = 'bg-brand/20 text-[#A58200]'; // A dark yellow/amber color
+                    badgeColors = 'bg-brand/20 text-[#A58200]';
                   } else if (student.status === 'Finalizado') {
                     badgeColors = 'bg-error/10 text-error';
                   }
-                  
                   return (
                     <div 
                       key={student.id}
-                      className="bg-white rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between h-[160px] transition-all border border-transparent hover:border-brand/50 group shadow-island"
+                      className="bg-surface-light rounded-2xl p-6 relative flex flex-col justify-between transition-colors duration-200 border border-transparent hover:bg-surface-dark group"
                     >
-                      <div>
-                        <div className="flex justify-between items-start mb-3">
-                          <span className={`text-mini font-black px-2.5 py-1 rounded-md tracking-wider uppercase ${badgeColors}`}>
+                      <div className="relative z-10">
+                        {/* Cabecera Tarjeta: Status y Fecha */}
+                        <div className="flex justify-between items-start mb-4">
+                          <span className={`text-mini font-black px-2.5 py-1 rounded-md tracking-wider uppercase ${badgeColors} transition-colors`}>
                             {student.status}
                           </span>
-                          <span className="text-mini text-text-muted font-black tracking-wider bg-surface-light px-2 py-1 rounded uppercase">
-                            UID: {student.id.split('-')[0]}
+                          <span className="text-mini text-text-muted font-black tracking-wider bg-white group-hover:bg-white/10 group-hover:text-text-muted px-2.5 py-1 rounded-md uppercase transition-colors">
+                            {new Date(student.created_at).toLocaleDateString()}
                           </span>
                         </div>
                         
-                        <h3 className="font-extrabold text-surface-dark text-lg tracking-tight uppercase truncate mt-2">
+                        {/* Nombre y Email */}
+                        <h3 className="font-extrabold text-surface-dark text-xl tracking-tight uppercase truncate mt-2 group-hover:text-brand transition-colors duration-200">
                           {student.name || 'Operador'}
                         </h3>
-                        <span className="text-micro font-bold tracking-widest text-text-muted mt-1 block truncate">
+                        <span className="text-xs font-bold tracking-widest text-text-muted mt-1 block truncate">
                           {student.email}
                         </span>
                       </div>
 
-                      <div className="border-t border-surface-light mt-3 pt-3 flex items-center justify-between text-xs">
-                        <span className="text-mini font-black tracking-widest text-surface-dark uppercase block truncate flex items-center gap-1.5">
-                          <div className="h-1.5 w-1.5 rotate-45 bg-brand" />
-                          {student.role || 'Sin Clasificar'}
-                        </span>
+                      {/* Info extra (Rol y Programa) */}
+                      <div className="relative z-10 mt-6 space-y-4">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-micro font-black tracking-widest text-text-muted uppercase">Especialización</span>
+                          <span className="text-sm font-bold text-surface-dark group-hover:text-white uppercase truncate transition-colors duration-200">
+                            {student.role || 'Sin Clasificar'}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-micro font-black tracking-widest text-text-muted uppercase">Programa</span>
+                          <span className="text-sm font-bold text-surface-dark group-hover:text-white uppercase truncate transition-colors duration-200">
+                            {student.program_type || 'Sin Programa'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Acción */}
+                      <div className="relative z-10 mt-8">
+                        <Link 
+                          href={`/admin/student/${student.id}`}
+                          className="block w-full text-center bg-white text-surface-dark group-hover:bg-brand group-hover:text-surface-dark px-4 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-colors duration-200"
+                        >
+                          Abrir Expediente
+                        </Link>
                       </div>
                     </div>
                   );
                 })
               )}
             </div>
+
+            {/* Paginación (Si aplica) */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-2">
+                <button 
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => p - 1)}
+                  className="px-4 py-2 rounded-xl bg-white shadow-island text-xs font-black tracking-widest uppercase text-surface-dark disabled:opacity-50 hover:bg-surface-light transition-colors"
+                >
+                  Anterior
+                </button>
+                <span className="text-xs font-bold text-text-muted">Página {currentPage} de {totalPages}</span>
+                <button 
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(p => p + 1)}
+                  className="px-4 py-2 rounded-xl bg-white shadow-island text-xs font-black tracking-widest uppercase text-surface-dark disabled:opacity-50 hover:bg-surface-light transition-colors"
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
 
           </div>
 
@@ -294,7 +345,7 @@ export default function MentorDashboard({ serverStudents }: { serverStudents: an
                   className="bg-surface-light hover:bg-surface-dark hover:text-brand text-surface-dark rounded-xl aspect-square flex flex-col items-center justify-center gap-1.5 transition-colors duration-200 group border border-transparent"
                   title="Añadir Estudiante"
                 >
-                  <IconUserPlus size={26} stroke={2} />
+                  <IconUserFilled size={26} />
                   <span className="text-mini font-black uppercase tracking-widest text-surface-dark group-hover:text-brand transition-colors">
                     AÑADIR
                   </span>
@@ -305,7 +356,7 @@ export default function MentorDashboard({ serverStudents }: { serverStudents: an
                   className="bg-surface-light hover:bg-surface-dark hover:text-brand text-text-muted rounded-xl aspect-square flex flex-col items-center justify-center gap-1.5 transition-colors duration-200 group border border-transparent"
                   title="Configuración Global"
                 >
-                  <IconSettings size={26} stroke={2} />
+                  <IconSettingsFilled size={26} />
                   <span className="text-mini font-black uppercase tracking-widest group-hover:text-brand transition-colors">
                     CONFIG
                   </span>
@@ -315,7 +366,7 @@ export default function MentorDashboard({ serverStudents }: { serverStudents: an
                   className="bg-surface-light hover:bg-surface-dark hover:text-brand text-text-muted rounded-xl aspect-square flex flex-col items-center justify-center gap-1.5 transition-colors duration-200 group border border-transparent"
                   title="Auditoría de Acceso"
                 >
-                  <IconSearch size={26} stroke={2} />
+                  <IconSearchFilled size={26} />
                   <span className="text-mini font-black uppercase tracking-widest group-hover:text-brand transition-colors">
                     BUSCAR
                   </span>

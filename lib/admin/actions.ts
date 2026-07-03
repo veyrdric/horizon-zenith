@@ -313,3 +313,158 @@ export async function createTagAction(name: string) {
   
   return { success: true, name: normalized };
 }
+
+export async function createPackageAction(studentId: string, title: string, totalClasses: number) {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'No autenticado' };
+
+  const adminCheck = await isAdmin(user);
+  if (!adminCheck) return { error: 'Permisos insuficientes' };
+
+  const supabaseAdmin = createAdminClient();
+
+  const { error } = await supabaseAdmin
+    .from('packages')
+    .insert({ 
+      student_id: studentId, 
+      title, 
+      total_classes: totalClasses 
+    });
+    
+  if (error) {
+    console.error('Error creating package:', error);
+    return { error: 'Error al crear el paquete' };
+  }
+  
+  revalidatePath(`/admin/student/${studentId}`);
+  return { success: true };
+}
+
+export async function createClassAction(
+  studentId: string, 
+  packageId: string, 
+  title: string, 
+  date: string, 
+  materialIds?: string[] | null
+) {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'No autenticado' };
+
+  const adminCheck = await isAdmin(user);
+  if (!adminCheck) return { error: 'Permisos insuficientes' };
+
+  const supabaseAdmin = createAdminClient();
+
+  // 1. Get current classes count for the package to assign class_number
+  const { data: existingClasses, error: countError } = await supabaseAdmin
+    .from('classes')
+    .select('id')
+    .eq('package_id', packageId);
+
+  if (countError) {
+    console.error('Error counting classes:', countError);
+    return { error: 'Error al contar las clases' };
+  }
+
+  const nextClassNumber = (existingClasses?.length || 0) + 1;
+
+  // 2. Insert the new class
+  const { data: newClass, error: classError } = await supabaseAdmin
+    .from('classes')
+    .insert({
+      student_id: studentId,
+      package_id: packageId,
+      title,
+      date,
+      class_number: nextClassNumber,
+      duration: '1',
+      description: 'Pendiente de descripción',
+      video_url: ''
+    })
+    .select()
+    .single();
+
+  if (classError || !newClass) {
+    console.error('Error creating class:', classError);
+    return { error: 'Error al crear la clase' };
+  }
+
+  // 3. Link materials if provided
+  if (materialIds && materialIds.length > 0) {
+    const materialsToInsert = materialIds.map(id => ({
+      class_id: newClass.id,
+      material_id: id
+    }));
+    
+    const { error: materialError } = await supabaseAdmin
+      .from('class_materials')
+      .insert(materialsToInsert);
+      
+    if (materialError) {
+      console.error('Error linking materials:', materialError);
+      return { error: 'Error al vincular los materiales, pero la clase fue creada.' };
+    }
+  }
+
+  revalidatePath(`/admin/student/${studentId}`);
+  return { success: true };
+}
+
+export async function updateClassAction(
+  studentId: string,
+  classId: string,
+  data: {
+    title: string;
+    date: string;
+    status: string;
+    duration: string;
+    video_url: string;
+    description: string;
+    materialIds?: string[] | null;
+  }
+) {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'No autenticado' };
+
+  const adminCheck = await isAdmin(user);
+  if (!adminCheck) return { error: 'Permisos insuficientes' };
+
+  const supabaseAdmin = createAdminClient();
+
+  const { error: updateError } = await supabaseAdmin
+    .from('classes')
+    .update({
+      title: data.title,
+      date: data.date,
+      status: data.status,
+      duration: data.duration,
+      video_url: data.video_url,
+      description: data.description,
+    })
+    .eq('id', classId);
+
+  if (updateError) {
+    console.error('Error updating class:', updateError);
+    return { error: 'Error al actualizar la clase' };
+  }
+
+  // Handle material
+  await supabaseAdmin
+    .from('class_materials')
+    .delete()
+    .eq('class_id', classId);
+
+  if (data.materialIds && data.materialIds.length > 0) {
+    const materialsToInsert = data.materialIds.map(id => ({
+      class_id: classId,
+      material_id: id
+    }));
+    
+    await supabaseAdmin
+      .from('class_materials')
+      .insert(materialsToInsert);
+  }
+
+  revalidatePath(`/admin/student/${studentId}`);
+  return { success: true };
+}

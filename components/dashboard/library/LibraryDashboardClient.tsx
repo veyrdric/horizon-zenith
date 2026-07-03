@@ -271,10 +271,6 @@ export default function LibraryDashboardClient({ materials }: { materials: any[]
       {materialToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-surface-dark border border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="w-16 h-16 bg-error/10 rounded-full flex items-center justify-center mb-6 mx-auto">
-              <IconTrash size={32} className="text-error" />
-            </div>
-            
             <h2 className="text-2xl font-black text-white text-center tracking-tight uppercase mb-2">
               ¿Eliminar Documento?
             </h2>

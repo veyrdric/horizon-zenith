@@ -2,6 +2,9 @@ import { getCurrentUser, isAdmin } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
 import { getStudentById } from '@/lib/admin/queries';
 import StudentDetailClient from '@/components/dashboard/students/StudentDetailClient';
+import { createAdminClient } from '@/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Detalle de Alumno - Horizon Zenith',
@@ -17,6 +20,12 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
   const resolvedParams = await params;
   const studentData = await getStudentById(resolvedParams.id);
 
+  const supabase = createAdminClient();
+  const { data: materials } = await supabase
+    .from('materials')
+    .select('id, title')
+    .order('created_at', { ascending: false });
+
   if (!studentData) {
     return (
       <div className="min-h-screen bg-surface-backdrop flex flex-col items-center justify-center">
@@ -29,5 +38,5 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
     );
   }
 
-  return <StudentDetailClient studentData={studentData} />;
+  return <StudentDetailClient studentData={studentData} allMaterials={materials || []} />;
 }

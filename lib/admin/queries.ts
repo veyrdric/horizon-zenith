@@ -91,7 +91,8 @@ export async function getStudentById(id: string) {
   }
 
   // Traer las relaciones
-  const { data: classes } = await supabase.from('classes').select('*').eq('student_id', id).order('class_number', { ascending: true });
+  const { data: packages } = await supabase.from('packages').select('*').eq('student_id', id).order('created_at', { ascending: false });
+  const { data: classes } = await supabase.from('classes').select('*, class_materials(material_id)').eq('student_id', id).order('class_number', { ascending: true });
   const { data: challenges } = await supabase.from('challenges').select('*').eq('student_id', id).order('id', { ascending: true });
   const { data: doubts } = await supabase.from('doubts').select('*').eq('student_id', id).order('created_at', { ascending: false });
 
@@ -102,6 +103,7 @@ export async function getStudentById(id: string) {
       created_at: authData.user.created_at,
       last_sign_in_at: authData.user.last_sign_in_at,
     },
+    packages: packages || [],
     classes: classes || [],
     challenges: challenges || [],
     doubts: doubts || [],
